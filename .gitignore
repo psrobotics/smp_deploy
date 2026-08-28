@@ -1,0 +1,14 @@
+build/
+**/build/
+__pycache__/
+*.py[cod]
+.venv/
+*.log
+sim2sim_out/
+compile_commands.json
+.cache/
+
+# Fetched by scripts/fetch_onnxruntime.sh, not committed (20-40 MB of binaries)
+deploy/thirdparty/onnxruntime-*/
+# The MuJoCo distribution, found by CMake
+sim/simulate/mujoco

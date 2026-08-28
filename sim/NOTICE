@@ -1,0 +1,63 @@
+unitree_mujoco — vendored
+=========================
+
+A vendored copy of
+
+    https://github.com/unitreerobotics/unitree_mujoco
+
+licensed BSD-3-Clause, Copyright (c) 2016-2024 HangZhou YuShu TECHNOLOGY
+CO.,LTD. ("Unitree Robotics"). LICENSE is upstream's, unchanged.
+
+The changes below are what a G1 sim2sim loop needs: driving the real controller
+binary — the one in ../deploy — against a simulated robot, unattended.
+
+Changes
+-------
+
+ADDED
+  unitree_robots/g1/g1_29dof_mjlabdyn.xml
+      Per-joint armature = actuator reflected inertia, damping and frictionloss
+      zeroed, matching the plant mjlab trains against. The stock file's uniform
+      armature 0.01 / damping 0.05 / frictionloss 0.2 is a different robot.
+  unitree_robots/g1/scene_29dof_mjlabdyn.xml
+      Flat scene around the above; the new default. White studio theme (white
+      sky, white floor with black checker edges, no reflectance) so a recording
+      is legible. Upstream's own scenes are untouched.
+  unitree_robots/g1/scene_obstacles.xml
+      A slalom corridor — somewhere to actually steer a joystick policy.
+  simulate/src/lcm_joystick.{h,cc}
+      joystick_type: "lcm" — the pad arrives as joy_t over LCM rather than from
+      /dev/input, so an unattended run can publish the chords the FSM needs.
+  simulate/lcm_types/smp_hw_lcm.lcm
+      The joy_t definition, identical to ../lcm_types/smp_hw_lcm.lcm's copy of
+      it. Bindings are generated at build time, never committed.
+  simulate/cyclonedds.xml
+      Loopback DDS config, so the simulator and the controller can find each
+      other on one machine.
+
+MODIFIED
+  simulate/CMakeLists.txt
+      MuJoCo located by search (-DMUJOCO_DIR, $MUJOCO_DIR, the gitignored
+      mujoco/ symlink, ~/.mujoco, /opt) instead of requiring the symlink.
+  simulate/src/main.cc
+      Headless mode: a physics loop with no window, for a machine with no
+      display or an X display without GLX. The elastic band releases on a timer
+      there, since there is no key to press. Side panels default off.
+  simulate/src/param.h
+      headless, band_release_s, show_left_ui, show_right_ui,
+      joystick_lcm_channel, joystick_lcm_url, and the flags --headless /
+      --band-release / --ui / --joystick. The last one makes the gamepad source
+      selectable at launch instead of only in config.yaml, so one config serves
+      both a hand-driven run and a scripted one.
+  simulate/src/unitree_sdk2_bridge.h
+      Dispatches joystick_type: "lcm".
+  simulate/config.yaml
+      Defaults for the G1 loop, and the DDS interface agreement that is
+      otherwise a silent "waiting for rt/lowstate" hang.
+
+REMOVED when vendoring
+  unitree_robots/{a2,b2,b2w,go2,go2w,h1,h1_2,r1}
+      249 MB of meshes for robots this repository has no use for. Pull them
+      from upstream if you need one.
+  example/
+      Per-robot SDK examples, none of them G1 policy work.

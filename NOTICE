@@ -1,0 +1,91 @@
+smp_hw
+Copyright 2026 psrobotics
+
+This repository contains code from two upstream projects, each under its own
+terms.
+UPSTREAM pins the repositories and commits; scripts/check_upstream_diff.sh
+shows what was changed.
+
+================================================================================
+deploy/ — Unitree Robotics, Apache License 2.0
+================================================================================
+
+The G1 controller under deploy/ is derived from the deploy/ tree of
+
+    https://github.com/unitreerobotics/unitree_rl_mjlab
+
+which is licensed under the Apache License, Version 2.0, and whose own LICENCE
+file carries "Copyright 2024 The Isaac Lab Project Developers". Individual
+source files retain their "Copyright (c) 2025, Unitree Robotics Co., Ltd."
+headers, and no copyright line has been added to files that were only
+modified. One header was removed rather than kept: deploy/include/FSM/StatePub.h
+is new here — it publishes over LCM, which upstream has none of — and carried
+that header only as a copy-paste artifact from a sibling file. Leaving it would
+have claimed Unitree's authorship of our code.
+
+As required by Apache-2.0 section 4(b), the following changes were made:
+
+  ADDED (new files, no Unitree copyright claimed on them)
+    include/FSM/StatePub.h      publishes proprioceptive state over LCM
+    include/FSM/CmdInputPub.h   publishes the joystick twist, scaled to the
+                                policy's command ranges
+    include/rt_dashboard.h      live loop-timing dashboard
+    include/rt_telemetry.h      control- and policy-loop deadline statistics
+    include/unitree_joystick_dsl.hpp
+                                declarative gamepad chords ("RT + A.on_pressed")
+                                so FSM transitions are configuration, not code
+    robots/g1/rt_bench.cpp      scheduler-latency benchmark
+
+  MODIFIED
+    include/FSM/State_RLBase.h  policy runs on its own thread with deadline
+                                telemetry; publishes state and the scaled
+                                joystick twist over LCM
+    include/isaaclab/assets/articulation/articulation.h
+                                added use_vel_cmd_override / vel_cmd_override,
+                                an integration point for an external twist
+                                source
+    include/isaaclab/envs/mdp/observations/observations.h
+                                velocity_commands honours that override
+    robots/g1/main.cpp          real-time defaults for the dashboard and the
+                                FSM thread priority
+    robots/g1/CMakeLists.txt    ONNX Runtime fetched rather than vendored; LCM
+                                types generated at build time
+    robots/g1/config/config.yaml
+                                four states (Passive, FixStand, RlStand,
+                                Velocity) driving the two policies shipped here
+    robots/g1/config/policy/velocity/v0/params/deploy_mjlab.yaml
+                                regenerated at full precision from the ONNX
+                                metadata; the hand-rounded values it replaced
+                                were up to 3% off on damping
+
+  REMOVED
+                                robot targets other than the 29-DoF G1; the
+                                State_Mimic reference-motion state and the cnpy
+                                dependency it needed
+
+Upstream has no NOTICE file, so there is no upstream notice content to
+propagate under section 4(d).
+
+================================================================================
+sim/ — Unitree Robotics, BSD-3-Clause
+================================================================================
+
+The MuJoCo simulator under sim/ is from
+
+    https://github.com/unitreerobotics/unitree_mujoco
+
+Copyright (c) 2016-2024 HangZhou YuShu TECHNOLOGY CO.,LTD. ("Unitree
+Robotics"). sim/LICENSE is theirs, unchanged. sim/NOTICE lists the changes.
+
+================================================================================
+The policies
+================================================================================
+
+The two ONNX policies under deploy/robots/g1/config/policy/ were trained in
+https://github.com/psrobotics/smp, which reproduces SMP (Mu et al. 2025,
+arXiv:2512.03028) on top of mjlab (https://github.com/mujocolab/mjlab). Nothing
+from that repository is vendored here — only the exported graphs. See
+UPSTREAM for the run that produced each.
+
+ONNX Runtime (MIT, Copyright (c) Microsoft Corporation) is fetched at build
+time by scripts/fetch_onnxruntime.sh, not committed.

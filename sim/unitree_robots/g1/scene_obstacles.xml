@@ -1,0 +1,68 @@
+<mujoco model="g1_29dof obstacle course">
+  <!-- A slalom corridor: four staggered pillars down a 5 m-wide passage.
+
+       Somewhere to actually steer the joystick policy. Walking in a straight
+       line on a flat plane exercises very little; threading pillars makes the
+       policy turn under load, which is where a gait that looks fine on the
+       flat starts to show its edges.
+
+       The stagger is ~1.5 m, close enough that avoiding one pillar points the
+       robot at the next. Everything sits within 10 m of the spawn.
+
+       Pillars are 0.6 m — shorter than the standing pelvis at ~0.75 m — and
+       geom group 0. Neither matters to the physics; both are conventions
+       carried over from the sensor rig this scene was first built for, kept
+       so it stays usable with a downward-looking perception stack bolted on.
+
+       Run it:  scripts/sim2sim.sh --scene scene_obstacles.xml -->
+
+  <include file="g1_29dof_mjlabdyn.xml"/>
+
+  <statistic center="3 0 0.5" extent="6.0"/>
+
+  <visual>
+    <headlight diffuse="0.8 0.8 0.8" ambient="0.2 0.2 0.2" specular="0.1 0.1 0.1"/>
+    <rgba force="1 0 0 1"/>
+    <global azimuth="120" elevation="-20" offwidth="1920" offheight="1080"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="1 1 1" rgb2="1 1 1" width="800" height="800"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="1 1 1" rgb2="1 1 1" markrgb="0 0 0" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0"/>
+    <material name="obstacle" rgba="0.75 0.25 0.2 1"/>
+    <material name="wall" rgba="0.35 0.35 0.4 1"/>
+  </asset>
+
+  <default>
+    <!-- group 0 explicitly rather than by default-inheritance. Nothing here
+         depends on it, but a downward-looking perception stack bolted on later
+         will, and the failure is silent. -->
+    <default class="course">
+      <geom group="0" type="box" material="obstacle" contype="1" conaffinity="1"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <light pos="4 0 2.5" dir="0 0 -1" directional="true" diffuse="0.4 0.4 0.4"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- Staggered pillars: the slalom. z = 0.3 puts the 0.6 m box on the
+         floor (MuJoCo box size is the half-extent). -->
+    <geom name="pillar_1" class="course" size="0.25 0.25 0.30" pos="2.0  0.85 0.30"/>
+    <geom name="pillar_2" class="course" size="0.25 0.25 0.30" pos="3.5 -0.85 0.30"/>
+    <geom name="pillar_3" class="course" size="0.25 0.25 0.30" pos="5.0  0.85 0.30"/>
+    <geom name="pillar_4" class="course" size="0.25 0.25 0.30" pos="6.5 -0.85 0.30"/>
+
+    <!-- A wider block mid-course: forces a committed detour rather than a
+         lateral sidestep, so the gait has to turn under load rather than
+         crab sideways past it. -->
+    <geom name="block_mid" class="course" size="0.20 0.90 0.30" pos="8.2 0.0 0.30"/>
+
+    <!-- Corridor walls at y = +/-2.5: close enough to keep a wandering robot
+         inside the course, far enough not to crowd the slalom. -->
+    <geom name="wall_left"  class="course" material="wall" size="5.5 0.15 0.30" pos="4.5  2.5 0.30"/>
+    <geom name="wall_right" class="course" material="wall" size="5.5 0.15 0.30" pos="4.5 -2.5 0.30"/>
+  </worldbody>
+</mujoco>

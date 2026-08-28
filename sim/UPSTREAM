@@ -1,0 +1,7 @@
+repo:    https://github.com/unitreerobotics/unitree_mujoco
+license: BSD-3-Clause
+commit:  ada40ed8e9eac04a9b2edbba76d4028ff20ace58
+removed: unitree_robots/a2, unitree_robots/b2, unitree_robots/b2w, unitree_robots/go2, unitree_robots/go2w, unitree_robots/h1, unitree_robots/h1_2, unitree_robots/r1, example
+note: |
+  Vendored, not submoduled — see ../UPSTREAM. NOTICE lists what changed.
+  scripts/check_upstream_diff.sh sim  diffs this tree against that commit.

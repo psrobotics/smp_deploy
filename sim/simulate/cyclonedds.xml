@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  CycloneDDS config for running the sim and the controller on one host.
+
+  Loopback is not multicast-capable on a stock Linux box, and CycloneDDS says
+  so ("selected interface \"lo\" is not multicast-capable: disabling
+  multicast") and then carries on — but with multicast off and no unicast
+  peers configured, the two participants never discover each other. The
+  controller sits at "Waiting for connection rt/lowstate" forever with no
+  further clue.
+
+  Naming localhost as an explicit peer restores discovery without needing
+  root (the alternative is `ip link set lo multicast on`, which does not
+  survive a reboot either).
+
+  Use it on BOTH processes:
+      export CYCLONEDDS_URI=file://$PWD/cyclonedds.xml
+  scripts/sim2sim.sh does this for you.
+-->
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain id="any">
+    <General>
+      <Interfaces><NetworkInterface name="lo" multicast="false"/></Interfaces>
+      <AllowMulticast>false</AllowMulticast>
+    </General>
+    <Discovery>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <Peers><Peer address="localhost"/></Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>

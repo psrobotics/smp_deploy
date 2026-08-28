@@ -1,0 +1,23 @@
+package smp_hw_lcm;
+
+// Gamepad state, layout matching sensor_msgs/Joy (ROS 2):
+//   axes    float32[] — analog axes normalised to [-1, 1]
+//   buttons int32[]   — digital, 0 released / 1 pressed
+//
+// Read by this simulator when it is configured with joystick_type: "lcm",
+// which is what makes the controller's FSM scriptable: the G1 reaches its RL
+// states only through gamepad chords, and unattended sim2sim has nobody to
+// press them.
+//
+// The controller repository (smp_hw) carries an identical definition, plus the
+// two messages the controller publishes. LCM fingerprints are computed from
+// field names and types, not the package name, so the two interoperate — but
+// keep the files in sync by hand when either changes.
+struct joy_t {
+    int64_t utime;
+    string frame_id;
+    int32_t num_axes;
+    float axes[num_axes];
+    int32_t num_buttons;
+    int32_t buttons[num_buttons];
+}

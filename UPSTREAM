@@ -1,0 +1,56 @@
+# Provenance for every third-party tree vendored in this repository.
+# Machine-readable on purpose: scripts/check_upstream_diff.sh reads it.
+#
+# Vendored rather than submoduled, deliberately: one clone gets you training,
+# sim2sim and the robot. The cost is that "what did you change in their code?"
+# is no longer a question GitHub answers for you — so each tree below pins the
+# commit it was taken from, sits at the same paths it has upstream, and
+# check_upstream_diff.sh answers the question in one command.
+
+[deploy]
+repo:    https://github.com/unitreerobotics/unitree_rl_mjlab
+subdir:  deploy
+path:    deploy/
+license: Apache-2.0
+commit:  UNRECORDED
+note: |
+  The G1 controller. Carved out of upstream's deploy/ tree and kept at the same
+  relative paths. The copy predates this repository and its source commit was
+  never noted; upstream was created 2026-01-27 and last pushed 2026-04-13, so
+  it is from inside that window. Pin it before the first public tag by diffing
+  deploy/include/isaaclab against upstream's tags.
+
+[sim]
+repo:    https://github.com/unitreerobotics/unitree_mujoco
+path:    sim/
+license: BSD-3-Clause
+commit:  ada40ed8e9eac04a9b2edbba76d4028ff20ace58
+removed: unitree_robots/a2, unitree_robots/b2, unitree_robots/b2w, unitree_robots/go2, unitree_robots/go2w, unitree_robots/h1, unitree_robots/h1_2, unitree_robots/r1, example
+note: |
+  The MuJoCo simulator. The eight non-G1 robots are 249 MB of meshes this
+  repository has no use for; pull them from upstream if you need one. See
+  sim/NOTICE for the changes.
+
+[policy]
+repo:    https://github.com/psrobotics/smp
+run:     https://wandb.ai/usc_sia/smp/runs/wwd2vxdj
+commit:  96dbb1cd55ffd667e12555778fd5adfeb57a0457   # + the diff archived in the run
+note: |
+  The joystick policy in deploy/robots/g1/config/policy/ was trained by the run
+  above, at that commit plus a three-hunk uncommitted diff the run archived.
+  The training repository is released separately; see docs/open_source_plan.md.
+
+[thirdparty/onnxruntime]
+repo:    https://github.com/microsoft/onnxruntime
+version: 1.22.0
+license: MIT
+note: |
+  NOT committed — scripts/fetch_onnxruntime.sh pulls the official CPU release
+  for the host architecture.
+
+[exporter: mjlab]
+repo:    https://github.com/mujocolab/mjlab
+rev:     731fa27
+note: |
+  Not used here at run time. It trained and exported the shipped policies, and
+  the ONNX metadata this repository checks against is what it writes at export.

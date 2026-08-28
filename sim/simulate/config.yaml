@@ -1,0 +1,65 @@
+# Defaults for the G1 sim2sim loop. Every key here is also a command-line flag
+# where it makes sense — see `./unitree_mujoco --help`.
+
+robot: "g1"
+
+# scene_29dof_mjlabdyn.xml, not scene_29dof.xml, and the difference matters.
+# The mjlabdyn robot has per-joint armature set to actuator reflected inertia
+# with damping and frictionloss zeroed, which is the plant mjlab trains
+# against. The stock file's uniform armature 0.01 / damping 0.05 /
+# frictionloss 0.2 is a DIFFERENT robot, and a policy that walks in mjlab is
+# not guaranteed to walk against it. If you are validating a policy trained in
+# mjlab, this is the scene to use.
+robot_scene: "scene_29dof_mjlabdyn.xml"   # /unitree_robots/[robot]/<scene>
+
+domain_id: 0     # must match the controller's ChannelFactory::Init(domain, ...)
+interface: "lo"  # and its -n/--network; see below
+
+# The simulator and the controller find each other over DDS. Two things must
+# agree or they never meet, with both processes otherwise healthy and the
+# controller printing "Waiting for connection rt/lowstate" forever:
+#
+#   * this `interface`, and the controller's -n flag. unitree_sdk2's
+#     Init(domain, iface) configures CycloneDDS programmatically when iface is
+#     non-empty, which OVERRIDES CYCLONEDDS_URI. The sim always passes one, so
+#     it discovers over multicast; a controller left on the XML sits on unicast.
+#   * CYCLONEDDS_URI, pointing both processes at cyclonedds.xml.
+
+use_joystick: 1
+# "xbox" / "switch" read /dev/input directly. "lcm" instead takes joy_t off the
+# channel below, which is what makes the controller's FSM scriptable — the G1
+# reaches its policy states only through gamepad chords, and unattended sim2sim
+# has nobody to press them. A real pad still works: bridge /dev/input onto the
+# same channel (smp_hw's scripts/joy_bridge.py), which also makes it work over
+# SSH.
+joystick_type: "lcm"
+joystick_device: "/dev/input/js0"   # xbox/switch only
+joystick_lcm_channel: "JOYSTICK"
+joystick_bits: 16   # some pads only have 8-bit accuracy
+
+print_scene_information: 1
+
+# Run without a viewer. MuJoCo only needs GL to render; stepping does not.
+# Required on a machine with no display, or an X display without GLX.
+headless: 0
+
+# MuJoCo's own side panels, off by default — they take about a third of the
+# window. `--ui` turns both on for a session.
+show_left_ui: 0
+show_right_ui: 0
+
+enable_elastic_band: 1   # virtual spring, for lifting the h1/g1
+# Headless only: sim seconds before the band lets go. The G1 is limp in the
+# controller's Passive state and falls within a second, and FixStand cannot
+# recover from prone — under the GUI a human holds it on the band through that
+# transition and releases it with a key. Set this long enough for your script
+# to reach a standing state. 0 never releases.
+#
+# 30 s, measured, not guessed: an unattended bring-up spends ~6 s waiting for
+# the controller to connect, ~5 s on the controller's own init, and ~5 s on the
+# chords themselves (the FSM's triggers are low-passed axes, so each chord must
+# be held). Releasing at 12 s dropped the robot while it was still limp in
+# Passive, and everything after that ran on a fallen robot — which looks like a
+# broken policy and is not one. Raise it further if your controller is slower
+# to come up.
+band_release_s: 30.0

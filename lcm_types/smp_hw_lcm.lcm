@@ -1,0 +1,51 @@
+package smp_hw_lcm;
+
+// Telemetry the G1 controller publishes, and the gamepad channel the simulator
+// reads. Bindings are generated at build time, never committed: one that drifts
+// from this file is a silent wire-format mismatch that shows up as garbage
+// floats rather than an error.
+//
+// The controller consumes none of this — it reads the robot's own pad over DDS.
+// These exist so something else can watch or drive it.
+
+// Velocity command in the right-handed FLU body frame: +x forward, +y left,
+// +z up, wz > 0 turns left.
+//
+// Published on CMD_INPUT: the operator's joystick, already scaled to the
+// policy's command ranges, so a subscriber sees the velocity target the policy
+// was given rather than raw stick deflection.
+struct cmd_t {
+    int64_t utime;
+    float vx;
+    float vy;
+    float wz;
+}
+
+// Proprioceptive state, published on ROBOT_STATE at the policy rate. The layout
+// is configurable (StatePub::set_layout); the 29-DoF G1 default is 64 wide:
+//
+//   projected_gravity(3) + base_ang_vel(3) + joint_pos_diff(29) + joint_vel(29)
+//
+// joint_pos_diff is joint_pos - default_joint_pos, the same quantity the policy
+// sees, so a log replays without needing the default pose separately.
+struct robot_state_t {
+    int64_t utime;
+    int32_t frame_index;
+    int32_t state_dim;
+    float state[state_dim];
+}
+
+// Gamepad state, layout matching sensor_msgs/Joy: axes normalised to [-1, 1],
+// buttons 0 or 1.
+//
+// Read by the simulator under `--joystick lcm`, which is what makes the FSM
+// scriptable. sim/simulate/lcm_types carries an identical copy; LCM fingerprints
+// ignore the package name, so keep the two in sync by hand.
+struct joy_t {
+    int64_t utime;
+    string frame_id;
+    int32_t num_axes;
+    float axes[num_axes];
+    int32_t num_buttons;
+    int32_t buttons[num_buttons];
+}
