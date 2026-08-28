@@ -54,7 +54,7 @@ Simulate starts in Passive -> (L2 + Up) -> FixStand -> (R2 + X) -> RlStand -> (R
 
 **Elastic band.** Use arrow keys and 9 to release the robot from hanging at RLstand mode. 
 
-## real
+## Sim2real
 
 
 1. Hang the robot and power it on. Enter develop mode.
